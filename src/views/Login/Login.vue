@@ -1,145 +1,195 @@
 <template>
-  <div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient">
-    <div class="card login-card shadow-lg border-0 overflow-hidden">
-      <div class="card-body p-5 p-md-6">
-        <!-- Header -->
-        <div class="text-center mb-5">
-          <h2 class="fw-bold mb-1">Welcome Back</h2>
-          <p class="text-muted">Please enter your details to sign in</p>
+  <div class="login-page">
+    <div class="login-box">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Sign in to continue</p>
+
+      <form @submit.prevent="onSubmit">
+        <!-- Email -->
+        <div class="form-group">
+          <label>Email</label>
+          <BaseInput
+            v-model="form.email"
+            type="email"
+            placeholder="example@email.com"
+            :class="{ error: errors.email }"
+            @blur="validateEmail"
+          />
+          <div v-if="errors.email" class="error-message">
+            {{ errors.email }}
+          </div>
         </div>
 
-        <!-- Form -->
-        <form @submit.prevent="handleLogin">
-          <div class="mb-4">
-            <label class="form-label fw-medium">Email</label>
-            <input
-              v-model="form.email"
-              type="email"
-              class="form-control form-control-lg rounded-pill shadow-sm"
-              placeholder="hello@example.com"
-              required
-              autocomplete="email"
-            />
+        <!-- Password -->
+        <div class="form-group">
+          <label>Password</label>
+          <BaseInput
+            v-model="form.password"
+            type="password"
+            placeholder="••••••••"
+            :class="{ error: errors.password }"
+            @blur="validatePassword"
+          />
+          <div v-if="errors.password" class="error-message">
+            {{ errors.password }}
           </div>
-
-          <div class="mb-5">
-            <label class="form-label fw-medium">Password</label>
-            <input
-              v-model="form.password"
-              type="password"
-              class="form-control form-control-lg rounded-pill shadow-sm"
-              placeholder="••••••••"
-              required
-              autocomplete="current-password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary btn-lg w-100 rounded-pill fw-semibold"
-            :disabled="isLoading"
-          >
-            <span v-if="isLoading">
-              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-              Signing in...
-            </span>
-            <span v-else>Sign In</span>
-          </button>
-        </form>
-
-        <!-- Footer links -->
-        <div class="mt-4 text-center small">
-          <p class="text-muted mb-2">
-            Don't have an account?
-            <a href="#" class="text-primary text-decoration-none fw-medium">Sign up</a>
-          </p>
-          <a href="#" class="text-muted text-decoration-none hover-text-primary">
-            Forgot password?
-          </a>
         </div>
+
+        <!-- Submit -->
+        <BaseButton type="submit" :disabled="isLoading" class="btn-login">
+          {{ isLoading ? "Logging in..." : "Login" }}
+        </BaseButton>
+      </form>
+
+      <div class="links">
+        <p>Don't have an account? <a href="#">Sign up</a></p>
+        <a href="#" class="forgot">Forgot password?</a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref } from "vue";
+import BaseInput from "@/components/base/BaseInput.vue";
+import BaseButton from "@/components/base/BaseButton.vue";
+import { useRequiredValidator } from "@/composables/useReqiureValidator";
 
 const form = reactive({
-  email: '',
-  password: ''
-})
+  email: "",
+  password: "",
+});
 
-const isLoading = ref(false)
+const { errors, validateField } = useRequiredValidator();
+const isLoading = ref(false);
 
-const handleLogin = () => {
-  isLoading.value = true
+const validateEmail = () =>
+  validateField("email", form.email, "Email is required");
 
-  // Simulate API call
+const validatePassword = () =>
+  validateField("password", form.password, "Password is required");
+
+const validateForm = () => {
+  const emailOk = validateEmail();
+  const passwordOk = validatePassword();
+  return emailOk && passwordOk;
+};
+
+const onSubmit = () => {
+  if (!validateForm()) return;
+
+  isLoading.value = true;
+
+  // simulate API
   setTimeout(() => {
-    console.log('Login attempt with:', form)
-    isLoading.value = false
-    // Add your actual login logic here
-  }, 1200)
-}
+    console.log("Login data:", form);
+    isLoading.value = false;
+  }, 1200);
+
+  console.log(validateForm());
+};
 </script>
 
 <style scoped>
-.bg-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* ========== Page ========== */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-.login-card {
+/* ========== Card ========== */
+.login-box {
   width: 100%;
   max-width: 420px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+  /* animation: slideFade 0.4s ease; */
 }
 
-.login-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+/* ========== Header ========== */
+.login-box h2 {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #1f2937;
 }
 
-.form-control {
-  padding: 0.85rem 1.25rem;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
 }
 
-.form-control:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.15);
-  outline: none;
+/* ========== Form ========== */
+.form-group {
+  margin-bottom: 18px;
 }
 
-.btn-primary {
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-  border: none;
-  padding: 0.85rem;
-  transition: all 0.3s ease;
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
-  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+/* ========== Error Message ========== */
+.error-message {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #ef4444;
 }
 
-.rounded-pill {
-  border-radius: 9999px !important;
+/*  btn login */
+.btn-login {
+  width: 100%;
+}
+/* ========== Links ========== */
+.links {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-.hover-text-primary:hover {
-  color: #6366f1 !important;
-  transition: color 0.2s ease;
+.links a {
+  color: #6366f1;
+  font-weight: 500;
+  text-decoration: none;
 }
 
-@media (max-width: 576px) {
-  .card-body {
-    padding: 2rem !important;
+.links a:hover {
+  text-decoration: underline;
+}
+
+.forgot {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+/* ========== Animation ========== */
+@keyframes slideFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 480px) {
+  .login-box {
+    padding: 24px;
   }
 }
 </style>

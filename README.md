@@ -1,69 +1,114 @@
+```import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import axios from "axios";
 
+export const useAuthStore = defineStore("auth", () => {
+  // =====================
+  // AXIOS CONFIG (LOCAL)
+  // =====================
+  const api = axios.create({
+    baseURL: "http://localhost:8000/api", // change if needed
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
+  // attach token automatically
+  api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
 
+  // =====================
+  // STATE
+  // =====================
+  const user = ref(null);
+  const token = ref(localStorage.getItem("token"));
+  const loading = ref(false);
+  const error = ref(null);
 
-<template>
-  <aside class="sidebar" :class="{ closed: !isOpen }">
-    <div class="p-3 pt-5">
-      <h6 class="text-uppercase text-secondary mb-3">Admin</h6>
+  // =====================
+  // GETTERS
+  // =====================
+  const isAuthenticated = computed(() => !!token.value);
 
-      <ul class="nav nav-pills flex-column gap-1">
-        <li class="nav-item">
-          <a class="nav-link active">
-            <i class="bi bi-speedometer me-2"></i>Dashboard
-          </a>
-        </li>
+  // =====================
+  // ACTIONS
+  // =====================
 
-        <li class="nav-item">
-          <a
-            class="nav-link d-flex justify-content-between align-items-center"
-            data-bs-toggle="collapse"
-            href="#articleCollapse"
-          >
-            My Article
-            <i class="bi bi-chevron-down"></i>
-          </a>
+  /**
+   * LOGIN
+   */
+  const login = async (payload) => {
+    loading.value = true;
+    error.value = null;
 
-          <div class="collapse" id="articleCollapse">
-            <ul class="nav flex-column ms-3 mt-1">
-              <li class="nav-item">
-                <a class="nav-link">All Article</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link">Create Article</a>
-              </li>
-            </ul>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </aside>
-</template>
+    try {
+      const res = await api.post("/login", payload);
 
-<script setup>
-defineProps({
-  isOpen: Boolean
-})
-</script>
+      // expected response:
+      // { token: "...", user: {...} }
 
+      token.value = res.data.token;
+      user.value = res.data.user;
 
-<template>
-  <Navbar @toggle-sidebar="toggleSidebar" />
-  <Sidebar :isOpen="sidebarOpen" />
+      localStorage.setItem("token", token.value);
 
-  <main class="content mt-5" :class="{ expanded: !sidebarOpen }">
-    <!-- Page Content -->
-  </main>
-</template>
+      return true;
+    } catch (err) {
+      error.value =
+        err.response?.data?.message ||
+        "Invalid email or password";
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
 
-<script setup>
-import { ref } from 'vue'
-import Navbar from './Navbar.vue'
-import Sidebar from './Sidebar.vue'
+  /**
+   * LOGOUT
+   */
+  const logout = () => {
+    user.value = null;
+    token.value = null;
+    error.value = null;
 
-const sidebarOpen = ref(true)
+    localStorage.removeItem("token");
+  };
 
-const toggleSidebar = () => {
-  sidebarOpen.value = !sidebarOpen.value
-}
-</script>
+  /**
+   * AUTO LOGIN / FETCH USER
+   */
+  const fetchUser = async () => {
+    if (!token.value) return;
+
+    try {
+      const res = await api.get("/me");
+      user.value = res.data;
+    } catch (err) {
+      logout();
+    }
+  };
+
+  // =====================
+  // RETURN
+  // =====================
+  return {
+    // state
+    user,
+    token,
+    loading,
+    error,
+
+    // getters
+    isAuthenticated,
+
+    // actions
+    login,
+    logout,
+    fetchUser,
+  };
+});

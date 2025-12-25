@@ -5,10 +5,7 @@
     :disabled="isDisabled || isLoading"
     @click="handleClick"
   >
-    <span
-      v-if="isLoading"
-      class="spinner-border spinner-border-sm me-2"
-    ></span>
+    <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
 
     <span :class="{ 'opacity-50': isLoading }">
       <slot />

@@ -15,8 +15,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 import App from "./App.vue";
 import router from "./router";
-import BaseButton from "./components/base/baseButton.vue";
-import BaseInput from "./components/base/baseInput.vue";
+import BaseButton from "./components/base/BaseButton.vue";
+import BaseInput from "./components/base/BaseInput.vue";
 
 const app = createApp(App);
 
