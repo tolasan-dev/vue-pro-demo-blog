@@ -1,88 +1,46 @@
 import { defineStore } from "pinia";
-
+import { ref } from "vue";
 import api from "@/services/axios";
-import { computed, ref, useTransitionState } from "vue";
 
-export const useAuthStore = defineStore("Auth", () => {
-  // state
-
+export const useAuthStore = defineStore("auth", () => {
+  // ===== state =====
   const user = ref(null);
   const token = ref(localStorage.getItem("token"));
-  const loading = ref(false);
-  const error = ref(null);
 
-  //==================
-  //   Getter function
-  //   =============
-
-  const isAuthenticated = computed(() => !!token.value);
-
-  // Actions
-
-  // LOGIN
-  const login = async (credentials) => {
-    loading.value = true;
-    error.value = null;
-
+  // ===== actions =====
+  const login = async (payload) => {
     try {
-      const res = await api.post("/auth/login", credentials);
+      const res = await api.post("/auth/login", payload);
 
-      token.value = res.data.token;
-      user.value = res.data.user;
+      const authToken = res.data?.data?.token;
+      const authUser = res.data?.data?.user;
 
-      localStorage.setItem("token", token.value);
+      if (!authToken) {
+        throw new Error("Token not found in response");
+      }
 
-      return true;
-    } catch (err) {
-      error.value = err.response?.data?.message || "Login failed";
-      return false;
-    } finally {
-      loading.value = false;
+      token.value = authToken;
+      user.value = authUser ?? null;
+
+      localStorage.setItem("token", authToken);
+
+      return res.data;
+    } catch (error) {
+      console.error("Auth login error:", error);
+      throw error; // allow component to handle error
     }
   };
 
-  // FETCH USER (auto-login)
-  const fetchUser = async () => {
-    if (!token.value) return;
-
-    try {
-      const res = await api.get("/auth/me");
-      user.value = res.data;
-    } catch {
-      logout();
-    }
-  };
-
-  //LOGOUT
-
-  const Logout = async () => {
-    try {
-      await api.post("auth/logout");
-    } catch (_) {}
-
+  const logout = () => {
+    token.value = null;
     user.value = null;
-    user.value = null;
-    user.value = null;
-
     localStorage.removeItem("token");
   };
 
   return {
-    // state
-
     user,
-    loading,
     token,
-    error,
-
-    // getter
-
-    isAuthenticated,
-
-    // action
-
-    Login,
-    Logout,
-    fetchUser,
+    login,
+    logout,
   };
 });

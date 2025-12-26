@@ -18,12 +18,13 @@ import BaseButton from "./components/base/BaseButton.vue";
 import BaseInput from "./components/base/BaseInput.vue";
 import BaseCard from "./components/base/baseCard.vue";
 
-const app = createApp(App);
 
+// Define object 
+const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
+
 // register btn components in main.js
 app.component("BaseButton", BaseButton, "BaseInput", BaseInput, "BaseCard",BaseCard);
-
 app.mount("#app");
