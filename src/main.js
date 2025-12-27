@@ -20,7 +20,6 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
-
 app.component("BaseButton", BaseButton);
 app.component("BaseInput", BaseInput);
 app.component("BaseCard", BaseCard);
