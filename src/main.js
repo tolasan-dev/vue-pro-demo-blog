@@ -13,25 +13,14 @@ import router from "./router";
 // Base components
 import BaseButton from "./components/base/BaseButton.vue";
 import BaseInput from "./components/base/BaseInput.vue";
-import BaseCard from "./components/base/BaseButton.vue";
-
-// Auth store
-import { useAuthStore } from "@/stores/auth";
+import BaseCard from "./components/base/BaseCard.vue";
 
 const app = createApp(App);
 const pinia = createPinia();
 
-// ✅ Install Pinia FIRST
 app.use(pinia);
-
-// ✅ Init auth BEFORE router
-// const authStore = useAuthStore();
-// authStore.initAuth();
-
-// ✅ Install router
 app.use(router);
 
-// ✅ Register global components (CORRECT WAY)
 app.component("BaseButton", BaseButton);
 app.component("BaseInput", BaseInput);
 app.component("BaseCard", BaseCard);
