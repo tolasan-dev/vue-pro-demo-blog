@@ -1,17 +1,26 @@
-// src/stores/auth.js
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/services/axios";
 
 export const useAuthStore = defineStore("auth", () => {
-  // STATE
-  const user = ref(null);
+  /* =========================
+   * STATE
+   * ========================= */
   const token = ref(localStorage.getItem("token"));
+  const user = ref(
+    localStorage.getItem("user")
+      ? JSON.parse(localStorage.getItem("user"))
+      : null
+  );
 
-  // GETTER
-  const isAuthenticated = computed(() => Boolean(token.value));
+  /* =========================
+   * GETTERS
+   * ========================= */
+  const isAuthenticated = computed(() => !!token.value);
 
-  // ACTIONS
+  /* =========================
+   * ACTIONS
+   * ========================= */
   const login = async (payload) => {
     const res = await api.post("/auth/login", payload);
     const data = res?.data?.data;
@@ -21,35 +30,38 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     token.value = data.token;
-    user.value = data.user ?? null;
+    user.value = data.user || null;
 
     localStorage.setItem("token", data.token);
-    api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+    localStorage.setItem("user", JSON.stringify(data.user));
 
     return data;
   };
 
-  const logout = () => {
-    token.value = null;
-    user.value = null;
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (_) {
+      // ignore
+    } finally {
+      token.value = null;
+      user.value = null;
 
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common.Authorization;
-  };
-
-  // INIT (important for refresh)
-  const initAuth = () => {
-    if (token.value) {
-      api.defaults.headers.common.Authorization = `Bearer ${token.value}`;
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     }
   };
 
   return {
-    user,
+    // state
     token,
+    user,
+
+    // getters
     isAuthenticated,
+
+    // actions
     login,
     logout,
-    initAuth,
   };
 });

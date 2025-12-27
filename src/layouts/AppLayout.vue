@@ -6,7 +6,7 @@
     <!-- Page Wrapper -->
     <div class="page">
       <!-- Navbar -->
-      <Navbar @toggle-sidebar="toggleSidebar"  @logout="handleLogout" />
+      <Navbar @toggle-sidebar="toggleSidebar" @logout="handleLogout" />
 
       <!-- Main Content -->
       <main class="content" :class="{ expanded: sidebarOpen }">
@@ -32,22 +32,25 @@
 
 <script setup>
 import { ref } from "vue";
-
 import Navbar from "./Navbar.vue";
 import Sidebar from "../components/layout/Sidebar.vue";
+import { useAuthStore } from "@/stores/auth";
+import { useRoute } from "vue-router";
 
 const sidebarOpen = ref(false);
 const loading = ref(false);
+
+const route = useRoute();
+const authStore = useAuthStore();
 
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value;
 };
 
-
-// ✅ LOGOUT HANDLER
+// ✅ LOGOUT HANDLER (FIXED)
 const handleLogout = async () => {
   await authStore.logout();
-  router.push({ name: "login" });
+  route.replace({ name: "login" });
 };
 
 const submitForm = () => {

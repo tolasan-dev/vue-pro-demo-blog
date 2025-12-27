@@ -49,27 +49,31 @@
   </div>
 </template>
 
+
 <script setup>
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import BaseInput from "@/components/base/BaseInput.vue";
 import BaseButton from "@/components/base/BaseButton.vue";
-
 import { useRequiredValidator } from "@/composables/useReqiureValidator";
 import { useAuthStore } from "@/stores/auth";
 
-const authStore = useAuthStore();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const form = reactive({
   email: "",
   password: "",
 });
 
-const { errors, validateField } = useRequiredValidator();
 const isLoading = ref(false);
 
+const { errors, validateField } = useRequiredValidator();
+
+/* =========================
+ * VALIDATION
+ * ========================= */
 const validateEmail = () =>
   validateField("email", form.email, "Email is required");
 
@@ -77,23 +81,27 @@ const validatePassword = () =>
   validateField("password", form.password, "Password is required");
 
 const validateForm = () => {
-  return validateEmail() && validatePassword();
+  const emailOk = validateEmail();
+  const passwordOk = validatePassword();
+  return emailOk && passwordOk;
 };
 
+/* =========================
+ * SUBMIT
+ * ========================= */
 const onSubmit = async () => {
   if (!validateForm()) return;
 
-  try {
-    isLoading.value = true;
+  isLoading.value = true;
 
+  try {
     await authStore.login({
       email: form.email,
       password: form.password,
     });
 
-    // ✅ REDIRECT AFTER SUCCESS
+    // ✅ REDIRECT AFTER LOGIN
     router.replace({ name: "dashboard" });
-
   } catch (error) {
     console.error("Login failed:", error?.message || error);
   } finally {
@@ -101,6 +109,7 @@ const onSubmit = async () => {
   }
 };
 </script>
+
 
 
 <style scoped>
