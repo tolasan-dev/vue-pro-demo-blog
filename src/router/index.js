@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 
 import Login from "@/views/Login/Login.vue";
 import Dashboard from "@/views/Dashboard/Dashboard.vue";
@@ -7,23 +8,25 @@ import AppLayout from "@/layouts/AppLayout.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // Login page (no layout)
+    {
+      path: "/",
+      redirect: "/dashboard",
+    },
+
     {
       path: "/login",
       name: "login",
       component: Login,
-      meta: {
-        title: "Login",
-      },
+      meta: { guest: true },
     },
 
-    // App layout
     {
-      path: "/",
+      path: "/dashboard",
       component: AppLayout,
+      meta: { requiresAuth: true },
       children: [
         {
-          path: "/",
+          path: "",
           name: "dashboard",
           component: Dashboard,
           meta: {
@@ -35,12 +38,36 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to) => {
-  document.title = to.meta.title
-    ? `${to.meta.title} - Admin Panel`
-    : "Admin Panel";
+/* =========================
+ * GLOBAL AUTH GUARD
+ * ========================= */
+router.beforeEach((to, from, next) => {
+  const auth = useAuthStore();
 
-  return true;
+  const requiresAuth = to.matched.some(
+    (route) => route.meta.requiresAuth
+  );
+
+  const isGuest = to.matched.some(
+    (route) => route.meta.guest
+  );
+
+  // Page title
+  if (to.meta.title) {
+    document.title = to.meta.title;
+  }
+
+  //  Protected route
+  if (requiresAuth && !auth.isAuthenticated) {
+    return next({ name: "login" });
+  }
+
+  //  Guest-only route
+  if (isGuest && auth.isAuthenticated) {
+    return next({ name: "dashboard" });
+  }
+
+  next();
 });
 
 export default router;

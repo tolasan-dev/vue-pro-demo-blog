@@ -49,20 +49,31 @@
   </div>
 </template>
 
+
 <script setup>
 import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+
 import BaseInput from "@/components/base/BaseInput.vue";
 import BaseButton from "@/components/base/BaseButton.vue";
 import { useRequiredValidator } from "@/composables/useReqiureValidator";
+import { useAuthStore } from "@/stores/auth";
+
+const router = useRouter();
+const authStore = useAuthStore();
 
 const form = reactive({
   email: "",
   password: "",
 });
 
-const { errors, validateField } = useRequiredValidator();
 const isLoading = ref(false);
 
+const { errors, validateField } = useRequiredValidator();
+
+/* =========================
+ * VALIDATION
+ * ========================= */
 const validateEmail = () =>
   validateField("email", form.email, "Email is required");
 
@@ -75,20 +86,31 @@ const validateForm = () => {
   return emailOk && passwordOk;
 };
 
-const onSubmit = () => {
+/* =========================
+ * SUBMIT
+ * ========================= */
+const onSubmit = async () => {
   if (!validateForm()) return;
 
   isLoading.value = true;
 
-  // simulate API
-  setTimeout(() => {
-    console.log("Login data:", form);
-    isLoading.value = false;
-  }, 1200);
+  try {
+    await authStore.login({
+      email: form.email,
+      password: form.password,
+    });
 
-  console.log(validateForm());
+    // ✅ REDIRECT AFTER LOGIN
+    router.replace({ name: "dashboard" });
+  } catch (error) {
+    console.error("Login failed:", error?.message || error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
+
+
 
 <style scoped>
 /* ========== Page ========== */

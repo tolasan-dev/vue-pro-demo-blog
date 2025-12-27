@@ -4,9 +4,7 @@ import axios from "axios";
  * Create Axios instance
  */
 const api = axios.create({
-  
-  baseURL: import.meta.env.VITE_API_URL,
-  timeout: 15000,
+  baseURL:"http://blogs.csm.linkpc.net/api/v1",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -37,14 +35,27 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Unauthorized → force logout
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      // optional: redirect to login
-      // window.location.href = "/login";
+    if (error.response) {
+      // Unauthorized → logout
+      if (error.response.status === 401) {
+        localStorage.removeItem("token");
+      }
+
+      // Optional: normalize backend error
+      return Promise.reject({
+        status: error.response.status,
+        message:
+          error.response.data?.message ||
+          "Something went wrong. Please try again.",
+        errors: error.response.data?.errors || null,
+      });
     }
 
-    return Promise.reject(error);
+    // Network / CORS / timeout
+    return Promise.reject({
+      status: null,
+      message: "Network error. Please check your connection.",
+    });
   }
 );
 
