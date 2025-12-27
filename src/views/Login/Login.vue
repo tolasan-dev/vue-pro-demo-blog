@@ -51,12 +51,16 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+
 import BaseInput from "@/components/base/BaseInput.vue";
 import BaseButton from "@/components/base/BaseButton.vue";
-import { useRequiredValidator } from "@/composables/useReqiureValidator";
-import { useAuthStore } from "@/stores/Auth";
 
-const authStore = useAuthStore(); // ✅ FIX 1
+import { useRequiredValidator } from "@/composables/useReqiureValidator";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
+const router = useRouter();
 
 const form = reactive({
   email: "",
@@ -73,27 +77,27 @@ const validatePassword = () =>
   validateField("password", form.password, "Password is required");
 
 const validateForm = () => {
-  const emailOk = validateEmail();
-  const passwordOk = validatePassword();
-  return emailOk && passwordOk;
+  return validateEmail() && validatePassword();
 };
 
 const onSubmit = async () => {
   if (!validateForm()) return;
 
   try {
-    isLoading.value = true; // ✅ FIX 2
+    isLoading.value = true;
 
     await authStore.login({
       email: form.email,
       password: form.password,
     });
 
-    console.log("Login success", form);
+    // ✅ REDIRECT AFTER SUCCESS
+    router.replace({ name: "dashboard" });
+
   } catch (error) {
-    console.error("Login failed:", error);
+    console.error("Login failed:", error?.message || error);
   } finally {
-    isLoading.value = false; 
+    isLoading.value = false;
   }
 };
 </script>

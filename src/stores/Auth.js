@@ -1,46 +1,55 @@
+// src/stores/auth.js
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import api from "@/services/axios";
 
 export const useAuthStore = defineStore("auth", () => {
-  // ===== state =====
+  // STATE
   const user = ref(null);
   const token = ref(localStorage.getItem("token"));
 
-  // ===== actions =====
+  // GETTER
+  const isAuthenticated = computed(() => Boolean(token.value));
+
+  // ACTIONS
   const login = async (payload) => {
-    try {
-      const res = await api.post("/auth/login", payload);
+    const res = await api.post("/auth/login", payload);
+    const data = res?.data?.data;
 
-      const authToken = res.data?.data?.token;
-      const authUser = res.data?.data?.user;
-
-      if (!authToken) {
-        throw new Error("Token not found in response");
-      }
-
-      token.value = authToken;
-      user.value = authUser ?? null;
-
-      localStorage.setItem("token", authToken);
-
-      return res.data;
-    } catch (error) {
-      console.error("Auth login error:", error);
-      throw error; // allow component to handle error
+    if (!data?.token) {
+      throw new Error("Login failed");
     }
+
+    token.value = data.token;
+    user.value = data.user ?? null;
+
+    localStorage.setItem("token", data.token);
+    api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+
+    return data;
   };
 
   const logout = () => {
     token.value = null;
     user.value = null;
+
     localStorage.removeItem("token");
+    delete api.defaults.headers.common.Authorization;
+  };
+
+  // INIT (important for refresh)
+  const initAuth = () => {
+    if (token.value) {
+      api.defaults.headers.common.Authorization = `Bearer ${token.value}`;
+    }
   };
 
   return {
     user,
     token,
+    isAuthenticated,
     login,
     logout,
+    initAuth,
   };
 });
