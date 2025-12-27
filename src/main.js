@@ -13,7 +13,7 @@ import router from "./router";
 // Base components
 import BaseButton from "./components/base/BaseButton.vue";
 import BaseInput from "./components/base/BaseInput.vue";
-import BaseCard from "./components/base/BaseCard.vue";
+import BaseCard from "./components/base/baseCard.vue";
 
 const app = createApp(App);
 const pinia = createPinia();
